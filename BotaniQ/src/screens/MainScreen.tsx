@@ -16,9 +16,10 @@ const PlantDetailModal: React.FC<{
     plant: Plant | null;
     visible: boolean;
     onClose: () => void,
-    removePlant: (plantId: string) => void
-}> = ({ plant, visible, onClose, removePlant }) => {
-    const [showAreUSure, setShowAreYouSure] = useState<boolean>(false);
+    removePlant: (plantId: string) => void,
+    setShowConfirmModal: (val: boolean) => void,
+    handleRemoveRequest: () => void 
+}> = ({ plant, visible, onClose, removePlant, setShowConfirmModal, handleRemoveRequest }) => {
 
     if (!plant) return null;
 
@@ -27,6 +28,7 @@ const PlantDetailModal: React.FC<{
             visible={visible}
             transparent={true}
             animationType="slide"
+            onRequestClose={onClose}
         >
             <View className="flex-1 justify-center items-center bg-black/50">
                 <View className="bg-white w-11/12 rounded-lg p-6 gap-4">
@@ -63,37 +65,93 @@ const PlantDetailModal: React.FC<{
 
                     <TouchableOpacity
                         className="bg-red-500 p-3 rounded-lg items-center"
-                        onPress={() => {
-                            removePlant(plant.id)
-                            onClose()
-                        }}
+                        onPress={handleRemoveRequest}
                     >
                         <Text className="text-white font-bold">Remove</Text>
                     </TouchableOpacity>
-
-
-
                 </View>
             </View>
         </Modal>
     );
 };
 
+const ConfirmationModal: React.FC<{
+    showConfirmModal: boolean,
+    setShowConfirmModal: (val: boolean) => void,
+    selectedPlant: Plant | null,
+    removePlant: (plantId: string) => void,
+    setSelectedPlant: (plant: Plant | null) => void,
+    handleConfirmRemove: () => void
+}> = ({showConfirmModal, setShowConfirmModal, selectedPlant, removePlant, setSelectedPlant, handleConfirmRemove}) => {
+
+    if (!selectedPlant) return null;
+
+    return (
+        <Modal
+            visible={showConfirmModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => {
+                setShowConfirmModal(false)
+                setSelectedPlant(null)
+            }}
+        >
+            <View className="flex-1 justify-center items-center bg-black/50 gap-4">
+                <Text className='text-white font-bold'>
+                    Are you sure you want to remove this plant?
+                </Text>
+                <View className="bg-white w-11/12 rounded-lg p-6 gap-4">
+                    <TouchableOpacity
+                        className="bg-red-500 p-3 rounded-lg items-center"
+                        onPress={handleConfirmRemove}
+                    >
+                        <Text className="text-white font-bold">Yes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className="bg-green-500 p-3 rounded-lg items-center"
+                        onPress={() => {
+                            setShowConfirmModal(false)
+                            setSelectedPlant(null)
+                        }}
+                    >
+                        <Text className="text-white font-bold">No</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    )
+}
+
 const MainScreen: React.FC = () => {
     const [isAddModalVisible, setAddModalVisible] = useState(false);
     const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
     const { plants, removePlant } = usePlants();
-    const [removeYes, setRemoveYes] = useState<boolean>(false);
-
-
+    const [isPlantDetailsModalVisible, setIsPlantDetailsModalVisible] = useState<boolean>(false)
+    const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
     const openPlantDetails = (plant: Plant) => {
         setSelectedPlant(plant);
+        setIsPlantDetailsModalVisible(true)
     };
 
     const closePlantDetails = () => {
+        setIsPlantDetailsModalVisible(false)
         setSelectedPlant(null);
     };
+
+    const handleRemovePlantRequest = () => {
+        setIsPlantDetailsModalVisible(false)
+        setTimeout(() => {
+            setShowConfirmModal(true)
+        }, 300);
+    }
+
+    const handleConfirmRemove = () => {
+        if(selectedPlant) {
+            removePlant(selectedPlant.id);
+            setShowConfirmModal(false);
+        }
+    }
 
     return (
         <View className="flex-1 bg-green-50">
@@ -150,10 +208,22 @@ const MainScreen: React.FC = () => {
             {/* Plant Details Modal */}
             <PlantDetailModal
                 plant={selectedPlant}
-                visible={selectedPlant !== null}
+                visible={isPlantDetailsModalVisible}
                 onClose={closePlantDetails}
                 removePlant={removePlant}
+                setShowConfirmModal={(val: boolean) => setShowConfirmModal(val)}
+                handleRemoveRequest={handleRemovePlantRequest}
             />
+
+            {/*confirmation modal*/}
+           {<ConfirmationModal
+                showConfirmModal={showConfirmModal}
+                setShowConfirmModal={setShowConfirmModal}
+                selectedPlant={selectedPlant}
+                removePlant={removePlant}
+                setSelectedPlant={setSelectedPlant}
+                handleConfirmRemove={handleConfirmRemove}
+            />}
         </View>
     );
 };
