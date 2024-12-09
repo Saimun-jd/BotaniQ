@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "BotaniQ",
+    "slug": "BotaniQ",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/botaniq-logo.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          
+          "color": "#ffffff"
+          
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Please accept to add plant photos"
+        }
+      ]
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "android": {
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ]
+    }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
