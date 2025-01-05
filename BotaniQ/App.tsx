@@ -8,6 +8,7 @@ import { PlantProvider } from './src/context/PlantContext';
 import { getData, storeData } from './src/utils/storage';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import MainScreen from './src/screens/MainScreen';
+import { UserProvider } from "./src/context/UserContext";
 
 export default function App() {
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
@@ -57,12 +58,14 @@ export default function App() {
   };
 
   return (
-    <PlantProvider>
-      {isFirstLaunch ? (
-        <OnboardingScreen onComplete={handleOnboardingComplete} />
-      ) : (
-        <MainScreen />
-      )}
-    </PlantProvider>
+    <UserProvider>
+      <PlantProvider>
+        {isFirstLaunch ? (
+          <OnboardingScreen onComplete={handleOnboardingComplete} />
+        ) : (
+          <MainScreen />
+        )}
+      </PlantProvider>
+    </UserProvider>
   );
 }

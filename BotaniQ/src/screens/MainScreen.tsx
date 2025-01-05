@@ -11,6 +11,8 @@ import { usePlants } from '../context/PlantContext';
 import PlantCard from '../components/PlantCard';
 import AddPlantModal from '../components/AddPlantModal';
 import { Plant } from '../types/Plant';
+import GoogleAuth from '../components/Auth';
+import { useUser } from '../context/UserContext';
 
 const PlantDetailModal: React.FC<{
     plant: Plant | null;
@@ -18,7 +20,7 @@ const PlantDetailModal: React.FC<{
     onClose: () => void,
     removePlant: (plantId: string) => void,
     setShowConfirmModal: (val: boolean) => void,
-    handleRemoveRequest: () => void 
+    handleRemoveRequest: () => void
 }> = ({ plant, visible, onClose, removePlant, setShowConfirmModal, handleRemoveRequest }) => {
 
     if (!plant) return null;
@@ -82,7 +84,7 @@ const ConfirmationModal: React.FC<{
     removePlant: (plantId: string) => void,
     setSelectedPlant: (plant: Plant | null) => void,
     handleConfirmRemove: () => void
-}> = ({showConfirmModal, setShowConfirmModal, selectedPlant, removePlant, setSelectedPlant, handleConfirmRemove}) => {
+}> = ({ showConfirmModal, setShowConfirmModal, selectedPlant, removePlant, setSelectedPlant, handleConfirmRemove }) => {
 
     if (!selectedPlant) return null;
 
@@ -122,12 +124,15 @@ const ConfirmationModal: React.FC<{
     )
 }
 
+
 const MainScreen: React.FC = () => {
     const [isAddModalVisible, setAddModalVisible] = useState(false);
     const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
     const { plants, removePlant } = usePlants();
     const [isPlantDetailsModalVisible, setIsPlantDetailsModalVisible] = useState<boolean>(false)
     const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+    const { user } = useUser();
+
 
     const openPlantDetails = (plant: Plant) => {
         setSelectedPlant(plant);
@@ -147,21 +152,30 @@ const MainScreen: React.FC = () => {
     }
 
     const handleConfirmRemove = () => {
-        if(selectedPlant) {
+        if (selectedPlant) {
             removePlant(selectedPlant.id);
             setShowConfirmModal(false);
         }
     }
 
+
     return (
         <View className="flex-1 bg-green-50">
             {/* Header */}
-            <View className="bg-green-600 p-6 pb-4">
-                <Text className="text-white text-3xl font-bold mt-6">My Garden</Text>
-                <Text className="text-green-100">
-                    {plants.length} plants in your collection
-                </Text>
+
+            <View className="bg-green-600 p-6 pb-4 flex flex-row justify-between items-center">
+                <View className='pb-6'>
+                    <Text className="text-white text-3xl font-bold mt-6">{user? `${user.name.split(' ')[0]}'s Garden`: 'My Garden'}</Text>
+                    <Text className="text-green-100">
+                        {plants.length} plants in your collection
+                    </Text>
+                </View>
+                <TouchableOpacity className='flex items-center justify-center w-14 h-14 bg-green-600 rounded'>
+                    {user? <Text numberOfLines={1} className='font-bold text-lg text-white'>{user.name.split(' ')[0]}</Text> : <GoogleAuth /> }
+                </TouchableOpacity>
+
             </View>
+
 
             {/* Plant Grid */}
             <FlatList
@@ -216,7 +230,7 @@ const MainScreen: React.FC = () => {
             />
 
             {/*confirmation modal*/}
-           {<ConfirmationModal
+            {<ConfirmationModal
                 showConfirmModal={showConfirmModal}
                 setShowConfirmModal={setShowConfirmModal}
                 selectedPlant={selectedPlant}
