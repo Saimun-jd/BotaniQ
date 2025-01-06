@@ -6,11 +6,13 @@ export type User = {
     name: string;
     email: string;
     photo: string;
+    provider_token: string;
 }
 
 interface UserContextType {
     user: User | null;
     addUser: (user: User) => Promise<void>;
+    removeUser: (user: User) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -42,9 +44,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }
 
+    const removeUser = async (user: User | null) => {
+        try {
+            if(user !== null) {
+                await storeData('user', {});
+                setUser(null);
+                console.log('user removed successful')
+            }
+        } catch (error) {
+            console.error('Error removing user from context', error);
+        }
+    }
+
 
     return (
-        <UserContext.Provider value={{ user, addUser }}>
+        <UserContext.Provider value={{ user, addUser, removeUser }}>
             {children}
         </UserContext.Provider>
     );

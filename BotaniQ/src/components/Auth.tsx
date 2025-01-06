@@ -22,16 +22,17 @@ const signIn = async (addUser: (user: User) => Promise<void> ) => {
                     token: response.data.idToken
                 })
                 console.log("printng user data ", response.data.user.name)
-
+                const tokens = await GoogleSignin.getTokens();
+                console.log("tokens are ", tokens)
 
                 const user: User = {
                     id: response.data.user.id ?? 'no id',
                     name: response.data.user.name ?? 'no name',
                     email: response.data.user.email,
-                    photo: response.data.user.photo ?? 'no photo'
+                    photo: response.data.user.photo ?? 'no photo',
+                    provider_token: tokens.accessToken ?? 'no provider token'
                 }
                 await addUser(user);
-
 
             } else {
                 throw new Error("no Id token present!")
@@ -63,7 +64,7 @@ export default function GoogleAuth() {
     const {addUser} = useUser();
     GoogleSignin.configure({
         webClientId: '870973181283-qeu6tqc10rrqif7eblrib2umtj31nr41.apps.googleusercontent.com',
-        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+        scopes: ['https://www.googleapis.com/auth/calendar'],
     });
     return (
         <GoogleSigninButton

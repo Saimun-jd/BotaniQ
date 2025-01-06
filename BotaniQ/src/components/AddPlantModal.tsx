@@ -15,6 +15,7 @@ import 'react-native-get-random-values'
 import { v4 as uuidv4 } from 'uuid';
 import { usePlants } from '../context/PlantContext';
 import * as Notifications from 'expo-notifications';
+import { type User, useUser } from '../context/UserContext';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -40,6 +41,7 @@ const AddPlantModal: React.FC<{
     const [isLoading, setIsLoading] = useState(false);
 
     const { addPlant } = usePlants();
+    const {user} = useUser();
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -54,10 +56,15 @@ const AddPlantModal: React.FC<{
         }
     };
 
-    const handleAddPlant = async () => {
+    const handleAddPlant = async (user: User) => {
         // Validate inputs
         if (!name || !wateringFrequency) {
             Alert.alert('Validation Error', 'Please enter plant name and watering frequency');
+            return;
+        }
+
+        if(user === null){
+            Alert.alert('Please sign in with google to add plant.');
             return;
         }
 
@@ -79,8 +86,49 @@ const AddPlantModal: React.FC<{
                 } : undefined
             };
 
+            const start = new Date();
+            const end = new Date();
+            end.setTime(start.getDate() + 2);
+
             // Use await to ensure plant is added before closing
             await addPlant(newPlant);
+            const event = {
+                'summary': `Water your plant ${name}`,
+                'description': 'Ahoy captain the time for watering your plant has come, lets grow together with BotaniQ',
+                'start': {
+                  'dateTime': fertilizingTime.toISOString(),
+                  'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+                },
+                'end': {
+                  'dateTime': fertilizingTime.toISOString(),
+                  'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+                },
+                'recurrence': [
+                  `RRULE:FREQ=DAILY;COUNT=${wateringFrequency}`
+                ],
+                'reminders': {
+                  'useDefault': false,
+                  'overrides': [
+                    {'method': 'email', 'minutes': 24 * 60},
+                    {'method': 'popup', 'minutes': 10},
+                  ],
+                },
+              };
+
+              console.log("session provider token ", user.provider_token);
+
+              await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                    method: "POST",
+                    headers: {
+                        'Authorization' : 'Bearer '+ user.provider_token
+                    },
+                    body: JSON.stringify(event)
+                }
+              ).then((data) => {
+                return data.json();
+              }).then((data) => {
+                console.log("calender data ", data)
+              })
 
             // Reset form and close modal
             resetForm();
@@ -220,7 +268,7 @@ const AddPlantModal: React.FC<{
 
                         <TouchableOpacity
                             className="bg-green-500 p-2 rounded w-5/12"
-                            onPress={handleAddPlant}
+                            onPress={() => handleAddPlant(user)}
                             disabled={isLoading}
                         >
                             <Text className="text-white text-center">

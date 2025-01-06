@@ -13,6 +13,8 @@ import AddPlantModal from '../components/AddPlantModal';
 import { Plant } from '../types/Plant';
 import GoogleAuth from '../components/Auth';
 import { useUser } from '../context/UserContext';
+import ProfileAvatar from '../components/ProfileAvatar';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const PlantDetailModal: React.FC<{
     plant: Plant | null;
@@ -131,7 +133,7 @@ const MainScreen: React.FC = () => {
     const { plants, removePlant } = usePlants();
     const [isPlantDetailsModalVisible, setIsPlantDetailsModalVisible] = useState<boolean>(false)
     const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
-    const { user } = useUser();
+    const { user, removeUser } = useUser();
 
 
     const openPlantDetails = (plant: Plant) => {
@@ -158,6 +160,19 @@ const MainScreen: React.FC = () => {
         }
     }
 
+    const signOut = async () => {
+        try {
+          await GoogleSignin.signOut();
+          if(user !== null) {
+            removeUser(user);
+          }
+          console.log("signout successful")
+        //   setState({ user: null }); 
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
 
     return (
         <View className="flex-1 bg-green-50">
@@ -170,9 +185,14 @@ const MainScreen: React.FC = () => {
                         {plants.length} plants in your collection
                     </Text>
                 </View>
-                <TouchableOpacity className='flex items-center justify-center w-14 h-14 bg-green-600 rounded'>
+                {/* <TouchableOpacity className='flex items-center justify-center w-14 h-14 bg-green-600 rounded'>
                     {user? <Text numberOfLines={1} className='font-bold text-lg text-white'>{user.name.split(' ')[0]}</Text> : <GoogleAuth /> }
-                </TouchableOpacity>
+                </TouchableOpacity> */}
+                {
+                    user?
+                        <ProfileAvatar user={user} onSignOut={signOut}/>
+                        : <GoogleAuth/>
+                }
 
             </View>
 
