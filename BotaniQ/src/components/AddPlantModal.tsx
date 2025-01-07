@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePlants } from '../context/PlantContext';
 import * as Notifications from 'expo-notifications';
 import { type User, useUser } from '../context/UserContext';
+import { supabase } from '../utils/supabase';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -91,44 +92,68 @@ const AddPlantModal: React.FC<{
             end.setTime(start.getDate() + 2);
 
             // Use await to ensure plant is added before closing
-            await addPlant(newPlant);
-            const event = {
-                'summary': `Water your plant ${name}`,
-                'description': 'Ahoy captain the time for watering your plant has come, lets grow together with BotaniQ',
-                'start': {
-                  'dateTime': fertilizingTime.toISOString(),
-                  'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
-                },
-                'end': {
-                  'dateTime': fertilizingTime.toISOString(),
-                  'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
-                },
-                'recurrence': [
-                  `RRULE:FREQ=DAILY;COUNT=${wateringFrequency}`
-                ],
-                'reminders': {
-                  'useDefault': false,
-                  'overrides': [
-                    {'method': 'email', 'minutes': 24 * 60},
-                    {'method': 'popup', 'minutes': 10},
-                  ],
-                },
-              };
-
-              console.log("session provider token ", user.provider_token);
-
-              await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-                    method: "POST",
-                    headers: {
-                        'Authorization' : 'Bearer '+ user.provider_token
-                    },
-                    body: JSON.stringify(event)
+            
+            const supabaseSession = await supabase.auth.getUser();
+            console.log("supabase session ", supabaseSession.data.user?.id)
+            if(supabaseSession){
+                const {data, error} = await supabase.from('Plants').insert({
+                    name: newPlant.name,
+                    description: newPlant.description,
+                    imageUri: newPlant.imageUri,
+                    watering_frequency: newPlant.wateringSchedule.frequency,
+                    last_watered: newPlant.wateringSchedule.lastWatered,
+                    fertilizing_frequency: newPlant.fertilizingSchedule?.frequency,
+                    last_fertilized: newPlant.fertilizingSchedule?.lastFertilized,
+                    user_id: supabaseSession.data.user?.id
+                }).select().single();
+                if(error) {
+                    throw error;
                 }
-              ).then((data) => {
-                return data.json();
-              }).then((data) => {
-                console.log("calender data ", data)
-              })
+                else {
+                    console.log("added plant ", data);
+                    newPlant.id = data.plant_id;
+                    await addPlant(newPlant);
+                    // logic for sending calender notification
+                    const event = {
+                        'summary': `Water your plant ${name}`,
+                        'description': 'Ahoy captain the time for watering your plant has come, lets grow together with BotaniQ',
+                        'start': {
+                          'dateTime': fertilizingTime.toISOString(),
+                          'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        },
+                        'end': {
+                          'dateTime': fertilizingTime.toISOString(),
+                          'timeZone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        },
+                        'recurrence': [
+                          `RRULE:FREQ=DAILY;COUNT=${wateringFrequency}`
+                        ],
+                        'reminders': {
+                          'useDefault': false,
+                          'overrides': [
+                            {'method': 'email', 'minutes': 24 * 60},
+                            {'method': 'popup', 'minutes': 10},
+                          ],
+                        },
+                      };
+        
+                    //   console.log("session provider token ", user.provider_token);
+                    console.log("user while adding calender ", user.provider_token);
+        
+                      await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                            method: "POST",
+                            headers: {
+                                'Authorization' : 'Bearer '+ user.provider_token
+                            },
+                            body: JSON.stringify(event)
+                        }
+                      ).then((data) => {
+                        return data.json();
+                      }).then((data) => {
+                        console.log("calender data ", data)
+                      })
+                }
+            }
 
             // Reset form and close modal
             resetForm();

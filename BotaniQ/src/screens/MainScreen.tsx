@@ -5,7 +5,8 @@ import {
     FlatList,
     TouchableOpacity,
     ImageBackground,
-    Modal
+    Modal,
+    Alert
 } from 'react-native';
 import { usePlants } from '../context/PlantContext';
 import PlantCard from '../components/PlantCard';
@@ -17,14 +18,16 @@ import ProfileAvatar from '../components/ProfileAvatar';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { supabase } from '../utils/supabase';
 
 const PlantDetailModal: React.FC<{
     plant: Plant | null;
     visible: boolean;
-    onClose: () => void,
-    removePlant: (plantId: string) => void,
-    setShowConfirmModal: (val: boolean) => void,
-    handleRemoveRequest: () => void
+    onClose: () => void;
+    removePlant: (plantId: string) => void;
+    setShowConfirmModal: (val: boolean) => void;
+    handleRemoveRequest: () => void;
+    isDeleting: boolean;
 }> = ({ plant, visible, onClose, removePlant, setShowConfirmModal, handleRemoveRequest }) => {
 
     if (!plant) return null;
@@ -87,7 +90,7 @@ const ConfirmationModal: React.FC<{
     selectedPlant: Plant | null,
     removePlant: (plantId: string) => void,
     setSelectedPlant: (plant: Plant | null) => void,
-    handleConfirmRemove: () => void
+    handleConfirmRemove: () => Promise<void>
 }> = ({ showConfirmModal, setShowConfirmModal, selectedPlant, removePlant, setSelectedPlant, handleConfirmRemove }) => {
 
     if (!selectedPlant) return null;
@@ -132,11 +135,12 @@ const ConfirmationModal: React.FC<{
 const MainScreen: React.FC = () => {
     const [isAddModalVisible, setAddModalVisible] = useState(false);
     const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
-    const { plants, removePlant } = usePlants();
+    const { plants, removePlant, removeAllPlants } = usePlants();
     const [isPlantDetailsModalVisible, setIsPlantDetailsModalVisible] = useState<boolean>(false)
     const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
     const { user, removeUser } = useUser();
     const insets = useSafeAreaInsets()
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
     const openPlantDetails = (plant: Plant) => {
@@ -156,10 +160,35 @@ const MainScreen: React.FC = () => {
         }, 300);
     }
 
-    const handleConfirmRemove = () => {
+    const handleConfirmRemove = async () => {
+        if (isDeleting) return;
+        setIsDeleting(true);
         if (selectedPlant) {
-            removePlant(selectedPlant.id);
-            setShowConfirmModal(false);
+            const supabaseSession = await supabase.auth.getUser();
+            if (supabaseSession) {
+                try {
+                    const { error } = await supabase.from('Plants').delete().eq('plant_id', selectedPlant.id.toString());
+                    if (error) {
+                        setIsDeleting(false);
+                        // Alert("sorry could not delete the plant");
+                        console.log("error removing plant ", error);
+                        return;
+                    } else {
+                        removePlant(selectedPlant.id);
+                        setShowConfirmModal(false);
+                        // TODO: 1
+                        // Remove calender event for this plant
+                        console.log("successfully removed plant ", selectedPlant.name);
+                    }
+                } catch (error) {
+                    console.log("error deleting plant ", error);
+                } finally {
+                    setIsDeleting(false);
+                }
+                // console.log("selected plant id ", selectedPlant.id);
+
+            }
+            // console.log("supabase session ", supabaseSession.data.user?.id)
         }
     }
 
@@ -168,6 +197,7 @@ const MainScreen: React.FC = () => {
             await GoogleSignin.signOut();
 
             removeUser(user);
+            removeAllPlants();
 
             console.log("signout successful")
             //   setState({ user: null }); 
@@ -178,8 +208,8 @@ const MainScreen: React.FC = () => {
 
 
     return (
-        <View className="flex-1 bg-green-50" style={{paddingTop: insets.top}}>
-            <StatusBar animated={true} backgroundColor='#61dafb' hidden={true}/>
+        <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top }}>
+            <StatusBar animated={true} backgroundColor='#61dafb' hidden={true} />
             {/* Header */}
 
             <View className="bg-green-600 p-6 pb-4 flex flex-row justify-between items-center" >
@@ -251,6 +281,7 @@ const MainScreen: React.FC = () => {
                 removePlant={removePlant}
                 setShowConfirmModal={(val: boolean) => setShowConfirmModal(val)}
                 handleRemoveRequest={handleRemovePlantRequest}
+                isDeleting={isDeleting}
             />
 
             {/*confirmation modal*/}

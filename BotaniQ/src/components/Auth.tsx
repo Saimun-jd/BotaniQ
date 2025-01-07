@@ -7,8 +7,9 @@ import {
 } from '@react-native-google-signin/google-signin'
 import { supabase } from '../utils/supabase'
 import { useUser, type User } from '../context/UserContext';
+import { usePlants } from '../context/PlantContext';
 
-const signIn = async (addUser: (user: User) => Promise<void> ) => {
+const signIn = async (addUser: (user: User) => Promise<void>, fetchAllPlants: () => Promise<void> ) => {
     
     try {
         await GoogleSignin.hasPlayServices();
@@ -32,6 +33,7 @@ const signIn = async (addUser: (user: User) => Promise<void> ) => {
                     provider_token: tokens.accessToken ?? 'no provider token'
                 }
                 await addUser(user);
+                await fetchAllPlants();
 
             } else {
                 throw new Error("no Id token present!")
@@ -61,6 +63,7 @@ const signIn = async (addUser: (user: User) => Promise<void> ) => {
 
 export default function GoogleAuth() {
     const {addUser} = useUser();
+    const {fetchAllPlants} = usePlants();
     GoogleSignin.configure({
         webClientId: '870973181283-qeu6tqc10rrqif7eblrib2umtj31nr41.apps.googleusercontent.com',
         scopes: ['https://www.googleapis.com/auth/calendar'],
@@ -69,7 +72,7 @@ export default function GoogleAuth() {
         <GoogleSigninButton
             size={GoogleSigninButton.Size.Icon}
             color={GoogleSigninButton.Color.Light}
-            onPress={() => signIn(addUser)}
+            onPress={() => signIn(addUser, fetchAllPlants)}
         />
     )
 }
