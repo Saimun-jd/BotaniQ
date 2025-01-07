@@ -11,6 +11,8 @@
 - View plant details and care instructions
 - Keep track of watering and maintenance schedules
 - Beautiful and simple UI to make plant care easier
+- Google Signin feature and storing plants in realtime supabase database
+- Automatically create google calendar event on plant creation, Receive email notification for plants
 
 ---
 
@@ -18,6 +20,8 @@
 - **React Native** (via Expo)
 - **Expo SDK** for faster development and easier deployment
 - **NativeWind** for styling
+- **Supabase** for backend and database
+- **Google Console Api** for handling authentication 
 
 ---
 
@@ -33,9 +37,10 @@ Before running the app locally, you need to have the following installed:
 ### Steps to Run the App
 
 1. **Clone the repository**
+2. **Must have Java Jdk and android adb installed**
 
    ```bash
    git clone https://github.com/Saimun-jd/BotaniQ.git
    cd BotaniQ
    npm i
-   npm start
+   npx expo run:android
