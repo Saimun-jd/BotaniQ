@@ -22,10 +22,17 @@
       ],
       [
         "@react-native-google-signin/google-signin"
+      ],
+      [
+
+        "expo-asset",
+        {
+          "assets": ["./assets/images/botaniq-logo.png", "./BotaniQ/BotaniQ/assets/images"]
+        }
       ]
     ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/botaniq-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

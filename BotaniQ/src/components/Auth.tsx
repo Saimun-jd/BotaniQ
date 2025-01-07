@@ -6,7 +6,6 @@ import {
     isErrorWithCode
 } from '@react-native-google-signin/google-signin'
 import { supabase } from '../utils/supabase'
-import { storeData } from '../utils/storage';
 import { useUser, type User } from '../context/UserContext';
 
 const signIn = async (addUser: (user: User) => Promise<void> ) => {

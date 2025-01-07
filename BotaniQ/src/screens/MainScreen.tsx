@@ -15,6 +15,8 @@ import GoogleAuth from '../components/Auth';
 import { useUser } from '../context/UserContext';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 const PlantDetailModal: React.FC<{
     plant: Plant | null;
@@ -134,6 +136,7 @@ const MainScreen: React.FC = () => {
     const [isPlantDetailsModalVisible, setIsPlantDetailsModalVisible] = useState<boolean>(false)
     const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
     const { user, removeUser } = useUser();
+    const insets = useSafeAreaInsets()
 
 
     const openPlantDetails = (plant: Plant) => {
@@ -162,25 +165,26 @@ const MainScreen: React.FC = () => {
 
     const signOut = async () => {
         try {
-          await GoogleSignin.signOut();
-          if(user !== null) {
+            await GoogleSignin.signOut();
+
             removeUser(user);
-          }
-          console.log("signout successful")
-        //   setState({ user: null }); 
+
+            console.log("signout successful")
+            //   setState({ user: null }); 
         } catch (error) {
-          console.error(error);
+            console.error(error);
         }
-      };
+    };
 
 
     return (
-        <View className="flex-1 bg-green-50">
+        <View className="flex-1 bg-green-50" style={{paddingTop: insets.top}}>
+            <StatusBar animated={true} backgroundColor='#61dafb' hidden={true}/>
             {/* Header */}
 
-            <View className="bg-green-600 p-6 pb-4 flex flex-row justify-between items-center">
+            <View className="bg-green-600 p-6 pb-4 flex flex-row justify-between items-center" >
                 <View className='pb-6'>
-                    <Text className="text-white text-3xl font-bold mt-6">{user? `${user.name.split(' ')[0]}'s Garden`: 'My Garden'}</Text>
+                    <Text className="text-white text-3xl font-bold mt-6">{user != null && user?.name ? `${user?.name.split(' ')[0]}'s Garden` : 'My Garden'}</Text>
                     <Text className="text-green-100">
                         {plants.length} plants in your collection
                     </Text>
@@ -189,9 +193,9 @@ const MainScreen: React.FC = () => {
                     {user? <Text numberOfLines={1} className='font-bold text-lg text-white'>{user.name.split(' ')[0]}</Text> : <GoogleAuth /> }
                 </TouchableOpacity> */}
                 {
-                    user?
-                        <ProfileAvatar user={user} onSignOut={signOut}/>
-                        : <GoogleAuth/>
+                    user != null ?
+                        <ProfileAvatar user={user} onSignOut={signOut} />
+                        : <GoogleAuth />
                 }
 
             </View>

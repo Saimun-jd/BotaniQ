@@ -24,8 +24,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const loadUser = async () => {
             try {
                 const storedUser = await getData('user');
-                if (storedUser) {
-                    setUser(user);
+                if (storedUser != null) {
+                    console.log("loaded user ", storedUser)
+                    setUser(storedUser)
                 }
             } catch (error) {
                 console.error('Error loading plants', error);
@@ -46,11 +47,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const removeUser = async (user: User | null) => {
         try {
-            if(user !== null) {
-                await storeData('user', {});
-                setUser(null);
-                console.log('user removed successful')
-            }
+
+            await storeData('user', null);
+            setUser(null);
+            console.log('user removed successful')
         } catch (error) {
             console.error('Error removing user from context', error);
         }

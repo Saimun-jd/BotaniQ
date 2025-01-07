@@ -9,6 +9,8 @@ import { getData, storeData } from './src/utils/storage';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import MainScreen from './src/screens/MainScreen';
 import { UserProvider } from "./src/context/UserContext";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
@@ -51,6 +53,10 @@ export default function App() {
 
     registerForPushNotificationsAsync();
     checkFirstLaunch();
+    GoogleSignin.configure({
+      webClientId: '870973181283-qeu6tqc10rrqif7eblrib2umtj31nr41.apps.googleusercontent.com',
+      scopes: ['https://www.googleapis.com/auth/calendar'],
+    });
   }, []);
 
   const handleOnboardingComplete = () => {
@@ -58,14 +64,16 @@ export default function App() {
   };
 
   return (
-    <UserProvider>
-      <PlantProvider>
-        {isFirstLaunch ? (
-          <OnboardingScreen onComplete={handleOnboardingComplete} />
-        ) : (
-          <MainScreen />
-        )}
-      </PlantProvider>
-    </UserProvider>
+    <SafeAreaProvider>
+      <UserProvider>
+        <PlantProvider>
+          {isFirstLaunch ? (
+            <OnboardingScreen onComplete={handleOnboardingComplete} />
+          ) : (
+            <MainScreen/>
+          )}
+        </PlantProvider>
+      </UserProvider>
+    </SafeAreaProvider>
   );
 }
